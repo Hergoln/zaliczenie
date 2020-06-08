@@ -58,7 +58,7 @@ class CoffeeMachineTest {
         CoffeOrder order = orderOf(size, type);
         Coffee result = coffeeMachine.make(order);
         Coffee expected = expectedCoffeeOf(grindWieght, waterAmount, noMilk);
-        equalCoffees(result, expected);
+        checkCoffeesEquality(result, expected);
     }
 
     @Test
@@ -98,7 +98,7 @@ class CoffeeMachineTest {
         assertThrows(UnsupportedCoffeeException.class, () -> coffeeMachine.make(order));
     }
 
-    private void equalCoffees(Coffee result, Coffee expected) {
+    private void checkCoffeesEquality(Coffee result, Coffee expected) {
         assertEquals(result.getCoffeeWeigthGr(), expected.getCoffeeWeigthGr());
         assertEquals(result.getWaterAmount(), expected.getWaterAmount());
         assertEquals(result.getMilkAmout(), expected.getMilkAmout());
