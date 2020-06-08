@@ -52,9 +52,9 @@ class CoffeeMachineTest {
         waterAmounts.put(size, waterAmount);
         CoffeeReceipe receipe = CoffeeReceipe.builder().withWaterAmounts(waterAmounts).build();
 
-        prepareMocks(receipe, type, size, grindWieght);
+        prepareMocks(receipe, size, type, grindWieght);
 
-        CoffeOrder order = CoffeOrder.builder().withSize(size).withType(type).build();
+        CoffeOrder order = orderOf(size, type);
         Coffee result = coffeeMachine.make(order);
         Coffee expected = expectedCoffeeOf(grindWieght, waterAmount, noMilk);
 
@@ -69,15 +69,27 @@ class CoffeeMachineTest {
         waterAmounts.put(size, waterAmount);
         CoffeeReceipe receipe = CoffeeReceipe.builder().withWaterAmounts(waterAmounts).withMilkAmount(milkAmount).build();
 
-        prepareMocks(receipe, type, size, grindWieght);
+        prepareMocks(receipe, size, type, grindWieght);
 
-        CoffeOrder order = CoffeOrder.builder().withSize(size).withType(type).build();
+        CoffeOrder order = orderOf(size, type);
         coffeeMachine.make(order);
 
         InOrder callOrder = inOrder(milkProvider);
 
         callOrder.verify(milkProvider).heat();
         callOrder.verify(milkProvider).pour(milkAmount);
+    }
+
+    @Test
+    void incompleteReceipeShouldThrowException() {
+        Map<CoffeeSize, Integer> waterAmounts = new HashMap<>();
+        waterAmounts.put(size, null);
+        CoffeeReceipe receipe = CoffeeReceipe.builder().withWaterAmounts(waterAmounts).build();
+
+        prepareMocks(receipe, size, type, grindWieght);
+
+        CoffeOrder order = orderOf(size, type);
+        assertThrows(UnsupportedCoffeeSizeException.class, () -> coffeeMachine.make(order));
     }
 
     private Coffee expectedCoffeeOf(Double grindWeigh, Integer waterAmount, Integer milkAmount) {
@@ -90,10 +102,13 @@ class CoffeeMachineTest {
         return toReturn;
     }
 
-    private void prepareMocks(CoffeeReceipe receipe, CoffeType type, CoffeeSize size, Double grindWieght) {
+    private void prepareMocks(CoffeeReceipe receipe, CoffeeSize size, CoffeType type, Double grindWieght) {
         when(receipes.getReceipe(type)).thenReturn(Optional.of(receipe));
         when(grinder.canGrindFor(size)).thenReturn(true);
         when(grinder.grind(size)).thenReturn(grindWieght);
     }
 
+    private CoffeOrder orderOf(CoffeeSize size, CoffeType type) {
+        return CoffeOrder.builder().withSize(size).withType(type).build();
+    }
 }
