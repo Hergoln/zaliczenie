@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.when;
 
@@ -47,18 +48,11 @@ class CoffeeMachineTest {
 
     @Test
     public void properCoffeeOrderShouldReturnProperCoffee() {
-        CoffeType type = CoffeType.LATTE;
-        CoffeeSize size = CoffeeSize.STANDARD;
-        Double grindWieght = 1.0d;
-        Integer waterAmount = 1;
-
         Map<CoffeeSize, Integer> waterAmounts = new HashMap<>();
         waterAmounts.put(size, waterAmount);
         CoffeeReceipe receipe = CoffeeReceipe.builder().withWaterAmounts(waterAmounts).build();
 
-        when(receipes.getReceipe(type)).thenReturn(Optional.of(receipe));
-        when(grinder.canGrindFor(size)).thenReturn(true);
-        when(grinder.grind(size)).thenReturn(grindWieght);
+        prepareMocks(receipe, type, size, grindWieght);
 
         CoffeOrder order = CoffeOrder.builder().withSize(size).withType(type).build();
         Coffee result = coffeeMachine.make(order);
@@ -75,9 +69,7 @@ class CoffeeMachineTest {
         waterAmounts.put(size, waterAmount);
         CoffeeReceipe receipe = CoffeeReceipe.builder().withWaterAmounts(waterAmounts).withMilkAmount(milkAmount).build();
 
-        when(receipes.getReceipe(type)).thenReturn(Optional.of(receipe));
-        when(grinder.canGrindFor(size)).thenReturn(true);
-        when(grinder.grind(size)).thenReturn(grindWieght);
+        prepareMocks(receipe, type, size, grindWieght);
 
         CoffeOrder order = CoffeOrder.builder().withSize(size).withType(type).build();
         coffeeMachine.make(order);
@@ -98,5 +90,10 @@ class CoffeeMachineTest {
         return toReturn;
     }
 
+    private void prepareMocks(CoffeeReceipe receipe, CoffeType type, CoffeeSize size, Double grindWieght) {
+        when(receipes.getReceipe(type)).thenReturn(Optional.of(receipe));
+        when(grinder.canGrindFor(size)).thenReturn(true);
+        when(grinder.grind(size)).thenReturn(grindWieght);
+    }
 
 }
