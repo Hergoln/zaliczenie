@@ -30,6 +30,7 @@ class CoffeeMachineTest {
     private CoffeeMachine coffeeMachine;
 
     private Integer noMilk = null;
+    private CoffeeReceipe noReceipe = null;
     private CoffeType type;
     private CoffeeSize size;
     private Double grindWieght;
@@ -78,7 +79,7 @@ class CoffeeMachineTest {
     }
 
     @Test
-    void incompleteReceipeShouldThrowException() {
+    void incompleteReceipeShouldThrowUnsupportedCoffeeSizeException() {
         Map<CoffeeSize, Integer> waterAmounts = new HashMap<>();
         waterAmounts.put(size, null);
         CoffeeReceipe receipe = CoffeeReceipe.builder().withWaterAmounts(waterAmounts).build();
@@ -87,6 +88,14 @@ class CoffeeMachineTest {
 
         CoffeOrder order = orderOf(size, type);
         assertThrows(UnsupportedCoffeeSizeException.class, () -> coffeeMachine.make(order));
+    }
+
+    @Test
+    void noReceipesShouldThrowUnsupportedCoffeeException() {
+        prepareMocks(noReceipe, size, type, grindWieght);
+
+        CoffeOrder order = orderOf(size, type);
+        assertThrows(UnsupportedCoffeeException.class, () -> coffeeMachine.make(order));
     }
 
     private void equalCoffees(Coffee result, Coffee expected) {
@@ -106,7 +115,7 @@ class CoffeeMachineTest {
     }
 
     private void prepareMocks(CoffeeReceipe receipe, CoffeeSize size, CoffeType type, Double grindWieght) {
-        when(receipes.getReceipe(type)).thenReturn(Optional.of(receipe));
+        when(receipes.getReceipe(type)).thenReturn(Optional.ofNullable(receipe));
         when(grinder.canGrindFor(size)).thenReturn(true);
         when(grinder.grind(size)).thenReturn(grindWieght);
     }
