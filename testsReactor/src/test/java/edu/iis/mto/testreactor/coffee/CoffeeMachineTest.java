@@ -47,7 +47,7 @@ class CoffeeMachineTest {
     }
 
     @Test
-    public void properCoffeeOrderShouldReturnProperCoffee() {
+    void properCoffeeOrderShouldReturnProperCoffee() {
         Map<CoffeeSize, Integer> waterAmounts = new HashMap<>();
         waterAmounts.put(size, waterAmount);
         CoffeeReceipe receipe = CoffeeReceipe.builder().withWaterAmounts(waterAmounts).build();
@@ -57,10 +57,7 @@ class CoffeeMachineTest {
         CoffeOrder order = orderOf(size, type);
         Coffee result = coffeeMachine.make(order);
         Coffee expected = expectedCoffeeOf(grindWieght, waterAmount, noMilk);
-
-        assertEquals(result.getCoffeeWeigthGr(), expected.getCoffeeWeigthGr());
-        assertEquals(result.getWaterAmount(), expected.getWaterAmount());
-        assertEquals(result.getMilkAmout(), expected.getMilkAmout());
+        equalCoffees(result, expected);
     }
 
     @Test
@@ -90,6 +87,12 @@ class CoffeeMachineTest {
 
         CoffeOrder order = orderOf(size, type);
         assertThrows(UnsupportedCoffeeSizeException.class, () -> coffeeMachine.make(order));
+    }
+
+    private void equalCoffees(Coffee result, Coffee expected) {
+        assertEquals(result.getCoffeeWeigthGr(), expected.getCoffeeWeigthGr());
+        assertEquals(result.getWaterAmount(), expected.getWaterAmount());
+        assertEquals(result.getMilkAmout(), expected.getMilkAmout());
     }
 
     private Coffee expectedCoffeeOf(Double grindWeigh, Integer waterAmount, Integer milkAmount) {
