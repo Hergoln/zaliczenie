@@ -1,9 +1,11 @@
 package edu.iis.mto.testreactor.coffee;
 
 import edu.iis.mto.testreactor.coffee.milkprovider.MilkProvider;
+import edu.iis.mto.testreactor.coffee.milkprovider.MilkProviderException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,10 +29,20 @@ class CoffeeMachineTest {
     private CoffeeMachine coffeeMachine;
 
     private Integer noMilk = null;
+    private CoffeType type;
+    private CoffeeSize size;
+    private Double grindWieght;
+    private Integer waterAmount;
+    private Integer milkAmount;
 
     @BeforeEach
     void setUp() {
         coffeeMachine = new CoffeeMachine(grinder, milkProvider, receipes);
+        type = CoffeType.LATTE;
+        size = CoffeeSize.STANDARD;
+        grindWieght = 1.0d;
+        waterAmount = 1;
+        milkAmount = 1;
     }
 
     @Test
@@ -41,11 +54,11 @@ class CoffeeMachineTest {
 
         Map<CoffeeSize, Integer> waterAmounts = new HashMap<>();
         waterAmounts.put(size, waterAmount);
-        CoffeeReceipe receipe = receipe(waterAmounts);
+        CoffeeReceipe receipe = CoffeeReceipe.builder().withWaterAmounts(waterAmounts).build();
 
         when(receipes.getReceipe(type)).thenReturn(Optional.of(receipe));
         when(grinder.canGrindFor(size)).thenReturn(true);
-        when(grinder.grind(size)).thenReturn(1.0d);
+        when(grinder.grind(size)).thenReturn(grindWieght);
 
         CoffeOrder order = CoffeOrder.builder().withSize(size).withType(type).build();
         Coffee result = coffeeMachine.make(order);
@@ -56,8 +69,23 @@ class CoffeeMachineTest {
         assertEquals(result.getMilkAmout(), expected.getMilkAmout());
     }
 
-    private CoffeeReceipe receipe(Map<CoffeeSize, Integer> waterAmounts) {
-        return CoffeeReceipe.builder().withWaterAmounts(waterAmounts).build();
+    @Test
+    void coffeeReceipeWithMilkShouldCallMilkProviderMethods() throws MilkProviderException {
+        Map<CoffeeSize, Integer> waterAmounts = new HashMap<>();
+        waterAmounts.put(size, waterAmount);
+        CoffeeReceipe receipe = CoffeeReceipe.builder().withWaterAmounts(waterAmounts).withMilkAmount(milkAmount).build();
+
+        when(receipes.getReceipe(type)).thenReturn(Optional.of(receipe));
+        when(grinder.canGrindFor(size)).thenReturn(true);
+        when(grinder.grind(size)).thenReturn(grindWieght);
+
+        CoffeOrder order = CoffeOrder.builder().withSize(size).withType(type).build();
+        coffeeMachine.make(order);
+
+        InOrder callOrder = inOrder(milkProvider);
+
+        callOrder.verify(milkProvider).heat();
+        callOrder.verify(milkProvider).pour(milkAmount);
     }
 
     private Coffee expectedCoffeeOf(Double grindWeigh, Integer waterAmount, Integer milkAmount) {
